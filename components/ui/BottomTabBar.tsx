@@ -6,7 +6,8 @@ import {
   Pressable, 
   Animated,
   useWindowDimensions, 
-  I18nManager
+  I18nManager,
+  Platform
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -55,7 +56,7 @@ const BottomTabBar: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <BlurView intensity={30} style={styles.blurContainer}>
+      <BlurView intensity={Platform.OS === 'ios' ? 30 : 80} tint="light" style={styles.blurContainer}>
         <View style={styles.tabBarContainer}>
           {tabItems.map((item) => {
             const isActive = pathname === item.route;
@@ -113,8 +114,9 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 80,
-    paddingBottom: 20,
+    height: 60,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+    zIndex: 1,
   },
   blurContainer: {
     flex: 1,
@@ -124,7 +126,7 @@ const styles = StyleSheet.create({
   },
   tabBarContainer: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: Platform.OS === 'ios' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.85)',
     height: '100%',
     alignItems: 'center',
     justifyContent: 'space-around',
@@ -137,12 +139,12 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 2,
+    marginBottom: 0,
   },
   activeIconContainer: {
     backgroundColor: COLORS.primary,
