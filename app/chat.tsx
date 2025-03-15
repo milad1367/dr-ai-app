@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
   StatusBar,
+  Animated,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { COLORS } from '../constants';
@@ -31,12 +32,16 @@ import {
 import * as Haptics from 'expo-haptics';
 import { Message, UserMessage, AIMessage, TypingIndicatorMessage } from '../types/chat';
 import { LinearGradient } from 'expo-linear-gradient';
+import { CHAT_STYLES, getShadow, getGlassEffect } from '../components/chat/ChatStyles';
 
 export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [inputDisabled, setInputDisabled] = useState(false);
+  
+  // Animation for quick questions
+  const quickQuestionsOpacity = useRef(new Animated.Value(0)).current;
   
   const router = useRouter();
   const listRef = useRef<FlatList>(null);
@@ -45,6 +50,14 @@ export default function ChatScreen() {
   useEffect(() => {
     const welcomeMessage: AIMessage = createAIMessage(CHAT_TEXT.WELCOME_MESSAGE);
     setMessages([welcomeMessage]);
+    
+    // Animate in quick questions after a delay
+    Animated.timing(quickQuestionsOpacity, {
+      toValue: 1,
+      duration: CHAT_STYLES.ANIMATION_DURATION_NORMAL,
+      delay: 600,
+      useNativeDriver: true,
+    }).start();
   }, []);
   
   // Always scroll to the bottom when messages change
@@ -157,7 +170,7 @@ export default function ChatScreen() {
       {/* Main content area with gradient background */}
       <View style={styles.contentContainer}>
         <LinearGradient
-          colors={['rgba(240, 245, 255, 0.8)', 'rgba(230, 240, 250, 0.6)']}
+          colors={['rgba(248, 250, 255, 0.9)', 'rgba(240, 245, 255, 0.8)']}
           style={styles.backgroundGradient}
         >
           <KeyboardAvoidingView
@@ -191,38 +204,45 @@ export default function ChatScreen() {
         </LinearGradient>
       </View>
       
-      {/* Bottom tab bar - rendered first to be behind other elements */}
-      <View style={styles.tabBarContainer}>
-        <BottomTabBar />
+      {/* Bottom glass effect container for controls */}
+      <View style={styles.bottomControlsContainer}>
+        <View style={styles.bottomGlassEffect}>
+          {/* Quick questions */}
+          <Animated.View 
+            style={[
+              styles.quickQuestionsContainer,
+              { opacity: quickQuestionsOpacity }
+            ]}
+          >
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.quickQuestionsScroll}
+            >
+              {QUICK_QUESTIONS.map((question) => (
+                <QuickQuestion
+                  key={question.id}
+                  text={question.text}
+                  icon={question.icon}
+                  onPress={() => handleQuickQuestion(question.id, question.text)}
+                />
+              ))}
+            </ScrollView>
+          </Animated.View>
+          
+          {/* Chat input */}
+          <ChatInput
+            onSendMessage={handleSendMessage}
+            onStartVoiceInput={handleVoiceInput}
+            isRecording={isRecording}
+            inputDisabled={inputDisabled}
+          />
+        </View>
       </View>
       
-      {/* Fixed bottom section with quick questions and input - positioned above tab bar */}
-      <View style={styles.bottomContainer}>
-        {/* Quick questions */}
-        <View style={styles.quickQuestionsContainer}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.quickQuestionsScroll}
-          >
-            {QUICK_QUESTIONS.map((question) => (
-              <QuickQuestion
-                key={question.id}
-                text={question.text}
-                icon={question.icon}
-                onPress={() => handleQuickQuestion(question.id, question.text)}
-              />
-            ))}
-          </ScrollView>
-        </View>
-        
-        {/* Chat input */}
-        <ChatInput
-          onSendMessage={handleSendMessage}
-          onStartVoiceInput={handleVoiceInput}
-          isRecording={isRecording}
-          inputDisabled={inputDisabled}
-        />
+      {/* Bottom tab bar - rendered after controls so it appears below */}
+      <View style={styles.tabBarContainer}>
+        <BottomTabBar />
       </View>
     </View>
   );
@@ -236,7 +256,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     position: 'relative',
-    marginBottom: 60, // Add margin for the tabBar height
+    marginBottom: CHAT_STYLES.BOTTOM_TAB_HEIGHT, // Space for the bottom tab
   },
   backgroundGradient: {
     flex: 1,
@@ -248,51 +268,54 @@ const styles = StyleSheet.create({
   },
   messagesList: {
     flex: 1,
+    paddingTop: 12,
   },
   messagesContent: {
-    padding: 16,
+    paddingHorizontal: 16,
     paddingBottom: 16,
   },
   typingContainer: {
     paddingHorizontal: 16,
-    marginBottom: 8,
+    marginBottom: 16,
+  },
+  bottomControlsContainer: {
+    position: 'absolute',
+    bottom: CHAT_STYLES.BOTTOM_TAB_HEIGHT,
+    left: 0,
+    right: 0,
+    zIndex: 2,
+  },
+  bottomGlassEffect: {
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    ...Platform.select({
+      ios: {
+        backdropFilter: 'blur(10px)',
+      },
+    }),
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 8,
+    shadowColor: COLORS.shadowDark,
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 8,
+    borderTopWidth: 0.5,
+    borderColor: 'rgba(200, 220, 240, 0.5)',
+  },
+  quickQuestionsContainer: {
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+  },
+  quickQuestionsScroll: {
+    paddingHorizontal: 8,
   },
   tabBarContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+    height: CHAT_STYLES.BOTTOM_TAB_HEIGHT,
     zIndex: 1,
-  },
-  bottomContainer: {
-    position: 'absolute',
-    bottom: 60, // Increased distance above the tab bar
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 10,
-    paddingTop: 8,
-    paddingBottom: 10,
-    zIndex: 2, // Higher than the tab bar
-  },
-  quickQuestionsContainer: {
-    marginBottom: 8,
-  },
-  quickQuestionsScroll: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  quickQuestionsTitle: {
-    fontSize: 14,
-    color: COLORS.lightText,
-    marginLeft: 16,
-    marginBottom: 4,
-    fontWeight: '500',
   },
 }); 

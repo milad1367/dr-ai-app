@@ -12,6 +12,8 @@ import { COLORS } from '../../constants';
 import { CHAT_TEXT } from '../../constants/chatConstants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { CHAT_STYLES, getShadow } from './ChatStyles';
+import * as Haptics from 'expo-haptics';
 
 interface ChatHeaderProps {
   onBackPress?: () => void;
@@ -20,6 +22,7 @@ interface ChatHeaderProps {
 const ChatHeader: React.FC<ChatHeaderProps> = ({ onBackPress }) => {
   // Animated values for status pulse effect
   const pulseAnim = useRef(new Animated.Value(0.4)).current;
+  const statusOpacity = useRef(new Animated.Value(0)).current;
   
   // Start the pulse animation
   useEffect(() => {
@@ -38,33 +41,71 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onBackPress }) => {
       ]).start(() => animate());
     };
     
+    // Fade in the status elements
+    Animated.timing(statusOpacity, {
+      toValue: 1,
+      duration: CHAT_STYLES.ANIMATION_DURATION_SLOW,
+      delay: 300,
+      useNativeDriver: true,
+    }).start();
+    
     animate();
     
     return () => {
       pulseAnim.stopAnimation();
+      statusOpacity.stopAnimation();
     };
   }, []);
+  
+  const handleBackPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (onBackPress) onBackPress();
+  };
+  
+  const handleMenuPress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Menu functionality would go here
+  };
   
   return (
     <SafeAreaView style={styles.safeArea}>
       <LinearGradient
-        colors={[COLORS.gradientStart, COLORS.gradientEnd]}
+        colors={['#2C6BED', '#1850C4']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.gradient}
       >
-        <View style={styles.overlayPattern} />
+        <View style={styles.headerPattern}>
+          {/* Header pattern dots for visual interest */}
+          {[...Array(6)].map((_, index) => (
+            <View 
+              key={index} 
+              style={[
+                styles.patternDot,
+                {
+                  top: 15 + (index % 3) * 25,
+                  left: 20 + Math.floor(index / 3) * 100,
+                  opacity: 0.07 - (index * 0.01)
+                }
+              ]} 
+            />
+          ))}
+        </View>
         
         <View style={styles.container}>
           {/* Back button */}
           {onBackPress && (
             <TouchableOpacity
               style={styles.backButton}
-              onPress={onBackPress}
+              onPress={handleBackPress}
               activeOpacity={0.7}
             >
               <View style={styles.iconBackground}>
-                <FontAwesome5 name="arrow-right" size={18} color={COLORS.white} />
+                <FontAwesome5 
+                  name="arrow-right" 
+                  size={CHAT_STYLES.HEADER_ICON_SIZE - 2} 
+                  color={COLORS.white} 
+                />
               </View>
             </TouchableOpacity>
           )}
@@ -73,7 +114,12 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onBackPress }) => {
           <View style={styles.doctorInfo}>
             <View style={styles.avatarContainer}>
               <View style={styles.avatarInner}>
-                <FontAwesome5 name="robot" size={20} color={COLORS.white} solid />
+                <FontAwesome5 
+                  name="robot" 
+                  size={CHAT_STYLES.HEADER_ICON_SIZE} 
+                  color={COLORS.white} 
+                  solid 
+                />
               </View>
               
               {/* Animated status ring */}
@@ -81,16 +127,29 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onBackPress }) => {
                 style={[
                   styles.statusRing, 
                   { 
-                    opacity: pulseAnim,
+                    opacity: Animated.multiply(statusOpacity, pulseAnim),
                     transform: [{ scale: pulseAnim }]
                   }
+                ]} 
+              />
+              
+              {/* Inner glow */}
+              <Animated.View 
+                style={[
+                  styles.innerGlow,
+                  { opacity: Animated.multiply(statusOpacity, 0.7) }
                 ]} 
               />
             </View>
             
             <View style={styles.infoContainer}>
               <Text style={styles.doctorName}>{CHAT_TEXT.AI_NAME}</Text>
-              <View style={styles.statusContainer}>
+              <Animated.View 
+                style={[
+                  styles.statusContainer,
+                  { opacity: statusOpacity }
+                ]}
+              >
                 <Animated.View 
                   style={[
                     styles.statusDot,
@@ -98,7 +157,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onBackPress }) => {
                   ]} 
                 />
                 <Text style={styles.statusText}>آنلاین</Text>
-              </View>
+              </Animated.View>
             </View>
           </View>
           
@@ -106,9 +165,14 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onBackPress }) => {
           <TouchableOpacity
             style={styles.menuButton}
             activeOpacity={0.7}
+            onPress={handleMenuPress}
           >
             <View style={styles.iconBackground}>
-              <FontAwesome5 name="ellipsis-v" size={18} color={COLORS.white} />
+              <FontAwesome5 
+                name="ellipsis-v" 
+                size={CHAT_STYLES.HEADER_ICON_SIZE - 2} 
+                color={COLORS.white} 
+              />
             </View>
           </TouchableOpacity>
         </View>
@@ -119,43 +183,55 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onBackPress }) => {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: COLORS.primary,
-  },
-  gradient: {
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 10,
-    position: 'relative',
+    backgroundColor: COLORS.gradientStart,
     zIndex: 10,
   },
-  overlayPattern: {
+  gradient: {
+    shadowColor: COLORS.shadowDark,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 15,
+    position: 'relative',
+    zIndex: 10,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    overflow: 'hidden',
+  },
+  headerPattern: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    opacity: 0.1,
-    backgroundColor: 'transparent',
+  },
+  patternDot: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.white,
   },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 14,
+    paddingVertical: CHAT_STYLES.HEADER_PADDING_VERTICAL,
     paddingHorizontal: 16,
+    height: CHAT_STYLES.HEADER_HEIGHT,
   },
   backButton: {
     padding: 4,
   },
   iconBackground: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
   },
   doctorInfo: {
     flex: 1,
@@ -176,11 +252,11 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.35)',
     ...Platform.select({
       ios: {
         shadowColor: '#fff',
@@ -190,11 +266,22 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  innerGlow: {
+    position: 'absolute',
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    shadowColor: '#fff',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+  },
   statusRing: {
     position: 'absolute',
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     borderWidth: 2,
     borderColor: '#4CAF50',
     backgroundColor: 'transparent',
@@ -203,11 +290,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   doctorName: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: '700',
     color: COLORS.white,
     marginBottom: 4,
     textAlign: 'right',
+    textShadowColor: 'rgba(0, 0, 0, 0.15)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   statusContainer: {
     flexDirection: 'row',
@@ -220,11 +310,16 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#4CAF50',
     marginLeft: 6,
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
   },
   statusText: {
-    fontSize: 13,
-    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.95)',
     textAlign: 'right',
+    fontWeight: '500',
   },
   menuButton: {
     padding: 4,

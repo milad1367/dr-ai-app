@@ -12,6 +12,7 @@ import { CHAT_UI } from '../../constants/chatConstants';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Message } from '../../types/chat';
 import { LinearGradient } from 'expo-linear-gradient';
+import { CHAT_STYLES, getShadow, getGlassEffect } from './ChatStyles';
 
 interface MessageBubbleProps {
   message: Message;
@@ -24,18 +25,25 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(10)).current;
+  const scaleAnim = useRef(new Animated.Value(0.97)).current;
   
   // Animate in when the message appears
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: CHAT_UI.ANIMATION_DURATION,
+        duration: CHAT_STYLES.ANIMATION_DURATION_NORMAL,
         useNativeDriver: true,
       }),
       Animated.timing(translateY, {
         toValue: 0,
-        duration: CHAT_UI.ANIMATION_DURATION,
+        duration: CHAT_STYLES.ANIMATION_DURATION_NORMAL,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 6,
+        tension: 40,
         useNativeDriver: true,
       })
     ]).start();
@@ -49,58 +57,64 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   return (
     <Animated.View 
       style={[
-        styles.container as any,
-        isUserMessage ? styles.userContainer as any : styles.aiContainer as any,
-        { opacity: fadeAnim, transform: [{ translateY }] }
+        styles.container,
+        isUserMessage ? styles.userContainer : styles.aiContainer,
+        { 
+          opacity: fadeAnim, 
+          transform: [
+            { translateY }, 
+            { scale: scaleAnim }
+          ] 
+        }
       ]}
     >
       {/* Regular message bubble */}
       {!isTypingIndicator && (
         <View style={[
-          styles.bubble as any, 
-          isUserMessage ? null : styles.aiBubble as any
+          styles.bubble, 
+          isUserMessage ? null : styles.aiBubble
         ]}>
           {/* User message with gradient background */}
           {isUserMessage ? (
             <LinearGradient
-              colors={['#2C6BED', '#1E56CC']}
+              colors={['#2C6BED', '#1953D8']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={[styles.userBubbleGradient as any]}
+              style={styles.userBubbleGradient}
             >
               <Text style={[
-                styles.messageText as any,
-                styles.userMessageText as any
+                styles.messageText,
+                styles.userMessageText
               ]}>
                 {message.text}
               </Text>
               
               {message.formattedTime && (
-                <Text style={styles.timeTextUser as any}>
+                <Text style={styles.timeTextUser}>
                   {message.formattedTime}
                 </Text>
               )}
             </LinearGradient>
           ) : (
             /* AI message with glass effect */
-            <View style={styles.aiMessageContent as any}>
+            <View style={styles.aiMessageContent}>
               <Text style={[
-                styles.messageText as any,
-                styles.aiMessageText as any
+                styles.messageText,
+                styles.aiMessageText
               ]}>
                 {message.text}
               </Text>
               
               {message.formattedTime && (
-                <Text style={styles.timeText as any}>
+                <Text style={styles.timeText}>
                   {message.formattedTime}
                 </Text>
               )}
               
               {/* Decorative AI elements */}
-              <View style={styles.aiDecoration as any}>
-                <View style={styles.aiDecorationDot as any} />
-                <View style={styles.aiDecorationLine as any} />
+              <View style={styles.aiDecoration}>
+                <View style={styles.aiDecorationDot} />
+                <View style={styles.aiDecorationLine} />
               </View>
             </View>
           )}
@@ -109,8 +123,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       
       {/* Typing indicator */}
       {isTypingIndicator && (
-        <View style={[styles.bubble as any, styles.aiBubble as any, styles.typingBubble as any]}>
-          <View style={styles.typingContainer as any}>
+        <View style={[styles.bubble, styles.aiBubble, styles.typingBubble]}>
+          <View style={styles.typingContainer}>
             <TypingIndicator />
           </View>
         </View>
@@ -182,19 +196,20 @@ const TypingIndicator = () => {
   }, []);
   
   return (
-    <View style={styles.typingIndicator as any}>
-      <Animated.View style={[styles.typingDot as any, { opacity: dot1Opacity }]} />
-      <Animated.View style={[styles.typingDot as any, { opacity: dot2Opacity }]} />
-      <Animated.View style={[styles.typingDot as any, { opacity: dot3Opacity }]} />
+    <View style={styles.typingIndicator}>
+      <Animated.View style={[styles.typingDot, { opacity: dot1Opacity }]} />
+      <Animated.View style={[styles.typingDot, { opacity: dot2Opacity }]} />
+      <Animated.View style={[styles.typingDot, { opacity: dot3Opacity }]} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 4,
-    maxWidth: '75%',
+    marginVertical: CHAT_STYLES.MESSAGE_SPACING / 2,
+    maxWidth: '78%',
     alignSelf: 'flex-start',
+    paddingHorizontal: 2, // Add a bit of space for shadow
   },
   userContainer: {
     alignSelf: 'flex-end',
@@ -203,115 +218,113 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   bubble: {
-    borderRadius: CHAT_UI.BUBBLE_BORDER_RADIUS,
+    borderRadius: CHAT_STYLES.USER_BUBBLE_RADIUS,
     minHeight: 40,
     overflow: 'hidden',
   },
   userBubbleGradient: {
-    borderRadius: CHAT_UI.BUBBLE_BORDER_RADIUS,
+    borderRadius: CHAT_STYLES.USER_BUBBLE_RADIUS,
     borderBottomRightRadius: 4,
-    paddingHorizontal: CHAT_UI.BUBBLE_PADDING,
-    paddingVertical: 8,
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 3,
+    paddingHorizontal: CHAT_STYLES.BUBBLE_PADDING_HORIZONTAL,
+    paddingVertical: CHAT_STYLES.BUBBLE_PADDING_VERTICAL,
+    ...getShadow('medium'),
   },
   aiBubble: {
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     borderBottomLeftRadius: 4,
-    shadowColor: COLORS.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    ...getShadow('light'),
     borderWidth: Platform.OS === 'ios' ? 0 : 0.5,
     borderColor: 'rgba(200, 220, 240, 0.5)',
     ...Platform.select({
       ios: {
-        backgroundColor: 'rgba(240, 250, 255, 0.7)',
-        backdropFilter: 'blur(8px)',
+        ...getGlassEffect(0.8),
       },
       android: {
-        backgroundColor: 'rgba(240, 250, 255, 0.9)',
+        backgroundColor: 'rgba(248, 250, 255, 0.95)',
       },
     }),
   },
   aiMessageContent: {
-    paddingHorizontal: CHAT_UI.BUBBLE_PADDING,
-    paddingVertical: 8,
+    paddingHorizontal: CHAT_STYLES.BUBBLE_PADDING_HORIZONTAL,
+    paddingVertical: CHAT_STYLES.BUBBLE_PADDING_VERTICAL,
     position: 'relative',
   },
   typingBubble: {
-    minWidth: 60,
-    minHeight: 36,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    minWidth: 80,
+    minHeight: 40,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   messageText: {
-    fontSize: 16,
-    lineHeight: 22,
-    writingDirection: 'rtl', // For RTL languages
+    fontSize: CHAT_STYLES.MESSAGE_FONT_SIZE,
+    lineHeight: CHAT_STYLES.MESSAGE_LINE_HEIGHT,
+    textAlign: 'right',
+    writingDirection: 'rtl',
   },
   userMessageText: {
     color: COLORS.white,
-    textAlign: 'right',
+    fontWeight: '500',
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   aiMessageText: {
     color: COLORS.text,
-    textAlign: 'left',
+    fontWeight: '400',
   },
   timeText: {
-    fontSize: 11,
+    fontSize: 10,
     color: COLORS.lightText,
-    alignSelf: 'flex-end',
-    marginTop: 4,
+    marginTop: 6,
+    textAlign: 'right',
   },
   timeTextUser: {
-    fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.8)',
-    alignSelf: 'flex-end',
-    marginTop: 4,
+    fontSize: 10,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 6,
+    textAlign: 'right',
   },
   typingContainer: {
-    flexDirection: 'row',
+    paddingHorizontal: 8,
+    paddingVertical: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 24,
+    minHeight: 32,
   },
   typingIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
   },
   typingDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: COLORS.primary,
-    marginHorizontal: 2,
+    marginHorizontal: 3,
   },
   aiDecoration: {
     position: 'absolute',
-    top: 8,
     left: 0,
-    width: 3,
-    height: '70%',
-    alignItems: 'center',
+    top: 0,
+    opacity: 0.6,
   },
   aiDecorationDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: COLORS.primary,
-    marginBottom: 4,
+    backgroundColor: COLORS.secondary,
+    position: 'absolute',
+    left: 3,
+    top: 3,
   },
   aiDecorationLine: {
-    width: 2,
-    height: '100%',
-    backgroundColor: 'rgba(44, 107, 237, 0.2)',
-    borderRadius: 1,
+    width: 15,
+    height: 2,
+    backgroundColor: COLORS.secondary,
+    position: 'absolute',
+    left: 7,
+    top: 5,
+    opacity: 0.4,
   },
 });
 

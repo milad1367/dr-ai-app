@@ -12,6 +12,8 @@ import { COLORS } from '../../constants';
 import { CHAT_UI } from '../../constants/chatConstants';
 import { QuickQuestion as QuickQuestionType } from '../../types/chat';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import { CHAT_STYLES, getShadow, BUTTON_ANIMATION } from './ChatStyles';
 
 interface QuickQuestionProps extends Omit<QuickQuestionType, 'id'> {
   onPress: () => void;
@@ -33,14 +35,14 @@ const QuickQuestion: React.FC<QuickQuestionProps> = ({
       Animated.parallel([
         Animated.spring(scaleAnim, {
           toValue: 1,
-          friction: 6,
-          tension: 40,
+          friction: CHAT_STYLES.SPRING_CONFIG.DAMPING,
+          tension: CHAT_STYLES.SPRING_CONFIG.STIFFNESS,
           useNativeDriver: true,
         }),
         Animated.spring(translateY, {
           toValue: 0,
-          friction: 6,
-          tension: 40,
+          friction: CHAT_STYLES.SPRING_CONFIG.DAMPING,
+          tension: CHAT_STYLES.SPRING_CONFIG.STIFFNESS,
           useNativeDriver: true,
         }),
       ]),
@@ -51,29 +53,32 @@ const QuickQuestion: React.FC<QuickQuestionProps> = ({
       Animated.sequence([
         Animated.timing(glowAnim, {
           toValue: 1,
-          duration: 2000,
+          duration: 2500,
           useNativeDriver: false,
         }),
         Animated.timing(glowAnim, {
           toValue: 0,
-          duration: 2000,
+          duration: 2500,
           useNativeDriver: false,
         }),
       ])
     ).start();
   }, []);
   
-  // Handle press animation
+  // Handle press animation with haptic feedback
   const handlePress = () => {
+    // Provide haptic feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
     Animated.sequence([
       Animated.timing(scaleAnim, {
-        toValue: 0.9,
-        duration: 100,
+        toValue: BUTTON_ANIMATION.SCALE_DOWN,
+        duration: BUTTON_ANIMATION.DURATION_PRESS,
         useNativeDriver: true,
       }),
       Animated.timing(scaleAnim, {
         toValue: 1,
-        duration: 100,
+        duration: BUTTON_ANIMATION.DURATION_RELEASE,
         useNativeDriver: true,
       }),
     ]).start(() => {
@@ -84,7 +89,12 @@ const QuickQuestion: React.FC<QuickQuestionProps> = ({
   // Interpolate shadow and border colors for animation
   const borderColor = glowAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [CHAT_UI.QUICK_QUESTION_BORDER, COLORS.primary]
+    outputRange: ['rgba(44, 107, 237, 0.2)', 'rgba(44, 107, 237, 0.5)']
+  });
+  
+  const shadowOpacity = glowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.12, 0.25]
   });
   
   return (
@@ -103,24 +113,26 @@ const QuickQuestion: React.FC<QuickQuestionProps> = ({
       <TouchableOpacity
         style={styles.button}
         onPress={handlePress}
-        activeOpacity={0.7}
+        activeOpacity={0.8}
       >
         <Animated.View style={[
           styles.buttonInner,
           {
             borderColor: borderColor,
-            shadowOpacity: glowAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0.1, 0.25]
-            }),
+            shadowOpacity: shadowOpacity,
           }
         ]}>
           <View style={styles.iconContainer}>
             <LinearGradient
-              colors={['rgba(44, 107, 237, 0.15)', 'rgba(44, 107, 237, 0.25)']}
+              colors={['rgba(44, 107, 237, 0.12)', 'rgba(44, 107, 237, 0.22)']}
               style={styles.iconGradient}
             >
-              <FontAwesome5 name={icon} size={16} color={COLORS.primary} style={styles.icon} />
+              <FontAwesome5 
+                name={icon} 
+                size={CHAT_STYLES.ACTION_BUTTON_ICON_SIZE - 4} 
+                color={COLORS.primary} 
+                style={styles.icon} 
+              />
             </LinearGradient>
           </View>
           <Text style={styles.text}>{text}</Text>
@@ -136,41 +148,34 @@ const styles = StyleSheet.create({
     maxWidth: 200,
   },
   button: {
-    borderRadius: 16,
+    borderRadius: CHAT_STYLES.QUICK_ACTION_RADIUS,
     overflow: 'hidden',
   },
   buttonInner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: CHAT_UI.QUICK_QUESTION_BACKGROUND,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 16,
+    borderRadius: CHAT_STYLES.QUICK_ACTION_RADIUS,
     borderWidth: 1,
-    borderColor: CHAT_UI.QUICK_QUESTION_BORDER,
+    borderColor: 'rgba(44, 107, 237, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-    ...Platform.select({
-      ios: {
-        backgroundColor: 'rgba(255, 255, 255, 0.7)',
-      },
-      android: {
-        backgroundColor: 'rgba(255, 255, 255, 0.85)',
-      }
-    }),
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 4,
+    height: CHAT_STYLES.QUICK_ACTION_HEIGHT,
   },
   iconContainer: {
     marginRight: 10,
-    borderRadius: 12,
+    borderRadius: CHAT_STYLES.QUICK_ACTION_RADIUS / 2,
     overflow: 'hidden',
   },
   iconGradient: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
+    width: 32,
+    height: 32,
+    borderRadius: CHAT_STYLES.QUICK_ACTION_RADIUS / 2,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -179,8 +184,8 @@ const styles = StyleSheet.create({
   },
   text: {
     color: COLORS.darkBlue,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 15,
+    fontWeight: '600',
     textAlign: 'right',
     writingDirection: 'rtl',
     flex: 1,
