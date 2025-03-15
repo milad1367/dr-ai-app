@@ -7,6 +7,7 @@ export const TEXT = {
   HOME: 'خانه',
   CHAT: 'گفتگو',
   PROFILE: 'پروفایل',
+  DIAGNOSIS: 'تشخیص',
 };
 
 // Colors

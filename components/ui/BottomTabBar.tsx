@@ -18,7 +18,7 @@ interface TabItem {
   key: string;
   label: string;
   icon: string;
-  route: "/" | "/chat" | "/profile";
+  route: "/" | "/chat" | "/profile" | "/diagnosis";
 }
 
 const tabItems: TabItem[] = [
@@ -33,6 +33,12 @@ const tabItems: TabItem[] = [
     label: TEXT.CHAT,
     icon: 'comment-medical',
     route: '/chat',
+  },
+  {
+    key: 'diagnosis',
+    label: TEXT.DIAGNOSIS || 'تشخیص',
+    icon: 'heartbeat',
+    route: '/diagnosis',
   },
   {
     key: 'profile',
