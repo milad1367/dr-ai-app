@@ -1,50 +1,104 @@
-# Welcome to your Expo app 👋
+# Dr AI Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A modern, visually stunning mobile application for AI-powered medical consultations. The app provides a premium user experience with smooth animations, elegant Persian typography, and a futuristic medical-grade design.
 
-## Get started
+## Features
 
-1. Install dependencies
+- 🔥 Ultra-premium UI design with futuristic medical theme
+- 🧠 AI-powered medical consultations (MVP: chat interface)
+- 🌐 RTL support for Persian language
+- ✨ Smooth animations and transitions
+- 💯 Cross-platform (iOS and Android) compatibility
 
-   ```bash
-   npm install
-   ```
+## Screenshots
 
-2. Start the app
+(Coming soon)
 
-   ```bash
-    npx expo start
-   ```
+## Technologies Used
 
-In the output, you'll find options to open the app in a
+- **React Native / Expo**: For cross-platform mobile development
+- **Expo Router**: For declarative navigation
+- **Linear Gradient**: For premium gradient effects
+- **Animated API**: For smooth animations and transitions
+- **Expo Blur**: For modern, frosted-glass UI effects
+- **Expo Haptics**: For tactile feedback
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Project Structure
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+dr-ai-app/
+├── app/                  # Main screens and navigation
+│   ├── _layout.tsx       # Root layout and navigation config
+│   ├── index.tsx         # Home screen
+│   ├── chat.tsx          # Chat/Consultation screen
+│   └── profile.tsx       # User profile screen
+├── components/           # Reusable UI components
+│   └── ui/
+│       ├── BackgroundAnimation.tsx
+│       ├── BottomTabBar.tsx
+│       └── GradientButton.tsx
+├── services/             # API and data services
+│   └── api.js            # Mock API service
+├── utils/                # Utility functions
+│   └── animation.ts      # Animation utilities
+├── constants.js          # App-wide constants
+└── assets/               # Static assets (images, fonts)
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Getting Started
 
-## Learn more
+### Prerequisites
 
-To learn more about developing your project with Expo, look at the following resources:
+- Node.js (>= 14.x)
+- npm or yarn
+- Expo CLI
+- iOS Simulator or Android Emulator (or physical device)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Installation
 
-## Join the community
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/dr-ai-app.git
+cd dr-ai-app
+```
 
-Join our community of developers creating universal apps.
+2. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+3. Start the development server:
+```bash
+npm start
+# or
+yarn start
+```
+
+4. Follow the instructions in the terminal to open the app on your device or simulator.
+
+## Design Principles
+
+- **Premium Feel**: Every UI element is designed to feel premium and high-end
+- **Medical Accuracy**: Design elements reflect medical professionalism
+- **Smooth Interactions**: All animations and transitions are smooth and natural
+- **RTL Support**: Full support for Persian language and right-to-left layout
+- **Accessibility**: Designed with accessibility in mind
+
+## Future Enhancements
+
+- Full AI consultation system
+- Medical record integration
+- Appointment scheduling
+- Medication reminders
+- Doctor video consultations
+
+## License
+
+This project is licensed under the MIT License.
+
+## Acknowledgments
+
+- Medical icons provided by FontAwesome
+- Design inspiration from modern healthcare apps
