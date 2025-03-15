@@ -10,6 +10,7 @@ import {
   ScrollView,
   StatusBar,
   Animated,
+  Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { COLORS } from '../constants';
@@ -34,14 +35,18 @@ import { Message, UserMessage, AIMessage, TypingIndicatorMessage } from '../type
 import { LinearGradient } from 'expo-linear-gradient';
 import { CHAT_STYLES, getShadow, getGlassEffect } from '../components/chat/ChatStyles';
 
+// Get screen dimensions for responsive styling
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
 export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [inputDisabled, setInputDisabled] = useState(false);
   
-  // Animation for quick questions
+  // Animation for quick questions and background elements
   const quickQuestionsOpacity = useRef(new Animated.Value(0)).current;
+  const backgroundPatternOpacity = useRef(new Animated.Value(0)).current;
   
   const router = useRouter();
   const listRef = useRef<FlatList>(null);
@@ -51,13 +56,19 @@ export default function ChatScreen() {
     const welcomeMessage: AIMessage = createAIMessage(CHAT_TEXT.WELCOME_MESSAGE);
     setMessages([welcomeMessage]);
     
-    // Animate in quick questions after a delay
-    Animated.timing(quickQuestionsOpacity, {
-      toValue: 1,
-      duration: CHAT_STYLES.ANIMATION_DURATION_NORMAL,
-      delay: 600,
-      useNativeDriver: true,
-    }).start();
+    // Animate in UI elements with staggered timing
+    Animated.stagger(300, [
+      Animated.timing(backgroundPatternOpacity, {
+        toValue: 1,
+        duration: CHAT_STYLES.ANIMATION_DURATION_NORMAL,
+        useNativeDriver: true,
+      }),
+      Animated.timing(quickQuestionsOpacity, {
+        toValue: 1,
+        duration: CHAT_STYLES.ANIMATION_DURATION_NORMAL,
+        useNativeDriver: true,
+      }),
+    ]).start();
   }, []);
   
   // Always scroll to the bottom when messages change
@@ -72,6 +83,9 @@ export default function ChatScreen() {
     // Create and add user message
     const userMessage: UserMessage = createUserMessage(text);
     setMessages((prev: Message[]) => [...prev, userMessage]);
+    
+    // Provide haptic feedback when sending
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
     // Show typing indicator
     setIsTyping(true);
@@ -103,6 +117,9 @@ export default function ChatScreen() {
     // Create and add user message
     const userMessage: UserMessage = createUserMessage(questionText);
     setMessages((prev: Message[]) => [...prev, userMessage]);
+    
+    // Provide haptic feedback when sending
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
     // Show typing indicator
     setIsTyping(true);
@@ -162,7 +179,7 @@ export default function ChatScreen() {
   
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} />
+      <StatusBar barStyle="light-content" backgroundColor="#3C78F0" />
       
       {/* Chat header */}
       <ChatHeader onBackPress={handleBackPress} />
@@ -170,9 +187,34 @@ export default function ChatScreen() {
       {/* Main content area with gradient background */}
       <View style={styles.contentContainer}>
         <LinearGradient
-          colors={['rgba(248, 250, 255, 0.9)', 'rgba(240, 245, 255, 0.8)']}
+          colors={['rgba(250, 252, 255, 0.95)', 'rgba(238, 244, 255, 0.9)']}
           style={styles.backgroundGradient}
         >
+          {/* Background pattern for visual interest */}
+          <Animated.View 
+            style={[
+              styles.backgroundPattern,
+              { opacity: backgroundPatternOpacity }
+            ]}
+          >
+            {[...Array(6)].map((_, index) => (
+              <View 
+                key={index}
+                style={[
+                  styles.patternCircle,
+                  {
+                    top: 50 + (index % 3) * (SCREEN_HEIGHT / 4),
+                    right: index % 2 === 0 ? -30 : undefined,
+                    left: index % 2 === 1 ? -30 : undefined,
+                    width: 120 + (index % 3) * 40,
+                    height: 120 + (index % 3) * 40,
+                    opacity: 0.05 - (index * 0.005),
+                  }
+                ]}
+              />
+            ))}
+          </Animated.View>
+          
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.keyboardAvoidingView}
@@ -192,6 +234,9 @@ export default function ChatScreen() {
                 />
               )}
               showsVerticalScrollIndicator={false}
+              initialNumToRender={10}
+              maxToRenderPerBatch={10}
+              windowSize={10}
             />
             
             {/* Typing indicator */}
@@ -238,6 +283,9 @@ export default function ChatScreen() {
             inputDisabled={inputDisabled}
           />
         </View>
+        
+        {/* Shadow overlay to enhance depth */}
+        <View style={styles.bottomShadowOverlay} />
       </View>
       
       {/* Bottom tab bar - rendered after controls so it appears below */}
@@ -251,7 +299,7 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: '#F8FAFF', // Slightly lighter background
   },
   contentContainer: {
     flex: 1,
@@ -263,16 +311,29 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  backgroundPattern: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: 'hidden',
+  },
+  patternCircle: {
+    position: 'absolute',
+    borderRadius: 100,
+    backgroundColor: COLORS.primary,
+  },
   keyboardAvoidingView: {
     flex: 1,
   },
   messagesList: {
     flex: 1,
-    paddingTop: 12,
+    paddingTop: 16, // More spacing at top
   },
   messagesContent: {
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingBottom: 20, // More space at bottom
   },
   typingContainer: {
     paddingHorizontal: 16,
@@ -286,29 +347,44 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   bottomGlassEffect: {
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)', // More opaque for better contrast
     ...Platform.select({
       ios: {
-        backdropFilter: 'blur(10px)',
+        backdropFilter: 'blur(15px)', // Stronger blur effect
       },
     }),
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 8,
-    shadowColor: COLORS.shadowDark,
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    elevation: 8,
-    borderTopWidth: 0.5,
-    borderColor: 'rgba(200, 220, 240, 0.5)',
+    borderTopLeftRadius: 24, // More pronounced rounded corners
+    borderTopRightRadius: 24,
+    paddingBottom: 10, // More padding
+    shadowColor: '#1A3A80',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 10,
+    borderTopWidth: Platform.OS === 'ios' ? 0.5 : 1,
+    borderColor: 'rgba(210, 230, 250, 0.6)', // More visible border
+  },
+  bottomShadowOverlay: {
+    position: 'absolute',
+    top: -20, // Extend above the glass effect
+    left: 0,
+    right: 0,
+    height: 30,
+    backgroundColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 0, // No elevation on Android
+    zIndex: -1,
   },
   quickQuestionsContainer: {
-    paddingVertical: 12,
-    paddingHorizontal: 8,
+    paddingVertical: 14, // More vertical padding
+    paddingHorizontal: 10,
   },
   quickQuestionsScroll: {
     paddingHorizontal: 8,
+    paddingBottom: 2, // Small space at bottom
   },
   tabBarContainer: {
     position: 'absolute',

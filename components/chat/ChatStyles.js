@@ -7,27 +7,16 @@ export const getShadow = (level = 'medium') => {
   const shadowMap = {
     light: {
       ios: {
-        shadowColor: COLORS.shadow,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.12,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 2,
-      },
-    },
-    medium: {
-      ios: {
         shadowColor: COLORS.shadowDark,
-        shadowOffset: { width: 0, height: 3 },
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.16,
         shadowRadius: 6,
       },
       android: {
-        elevation: 4,
+        elevation: 3,
       },
     },
-    strong: {
+    medium: {
       ios: {
         shadowColor: COLORS.shadowDark,
         shadowOffset: { width: 0, height: 4 },
@@ -35,7 +24,18 @@ export const getShadow = (level = 'medium') => {
         shadowRadius: 8,
       },
       android: {
-        elevation: 8,
+        elevation: 6,
+      },
+    },
+    strong: {
+      ios: {
+        shadowColor: COLORS.shadowDark,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.28,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 10,
       },
     },
   };
@@ -43,16 +43,15 @@ export const getShadow = (level = 'medium') => {
   return Platform.select(shadowMap[level]);
 };
 
-// Glass effect styling
-export const getGlassEffect = (opacity = 0.8) => {
+// Glass effect styling with improved opacity and blur
+export const getGlassEffect = (opacity = 0.9) => {
   return Platform.select({
     ios: {
       backgroundColor: `rgba(255, 255, 255, ${opacity})`,
-      // Note: backdropFilter only works on iOS
-      backdropFilter: 'blur(10px)',
+      backdropFilter: 'blur(15px)',
     },
     android: {
-      backgroundColor: `rgba(255, 255, 255, ${opacity + 0.1})`, // Slightly more opaque on Android
+      backgroundColor: `rgba(255, 255, 255, ${opacity + 0.08})`, // More opaque on Android
     },
   });
 };
@@ -60,40 +59,40 @@ export const getGlassEffect = (opacity = 0.8) => {
 // Chat UI specific constants
 export const CHAT_STYLES = {
   // Header
-  HEADER_HEIGHT: 70,
-  HEADER_PADDING_VERTICAL: 12,
-  HEADER_ICON_SIZE: 22,
+  HEADER_HEIGHT: 74,
+  HEADER_PADDING_VERTICAL: 14,
+  HEADER_ICON_SIZE: 24,
   
   // Message bubbles
-  USER_BUBBLE_RADIUS: 20,
-  AI_BUBBLE_RADIUS: 20,
-  BUBBLE_PADDING_HORIZONTAL: 16,
-  BUBBLE_PADDING_VERTICAL: 12,
-  MESSAGE_SPACING: 10,
+  USER_BUBBLE_RADIUS: 22,
+  AI_BUBBLE_RADIUS: 22,
+  BUBBLE_PADDING_HORIZONTAL: 18,
+  BUBBLE_PADDING_VERTICAL: 14,
+  MESSAGE_SPACING: 12,
   MESSAGE_FONT_SIZE: 16,
-  MESSAGE_LINE_HEIGHT: 22,
+  MESSAGE_LINE_HEIGHT: 24,
   
   // Input
-  INPUT_HEIGHT: 58,
+  INPUT_HEIGHT: 60,
   INPUT_BORDER_RADIUS: 30,
   INPUT_FONT_SIZE: 16,
-  INPUT_PADDING_HORIZONTAL: 18,
-  INPUT_MAX_HEIGHT: 100,
+  INPUT_PADDING_HORIZONTAL: 20,
+  INPUT_MAX_HEIGHT: 120,
   
   // Action buttons
-  ACTION_BUTTON_SIZE: 48,
-  ACTION_BUTTON_ICON_SIZE: 20,
-  ACTION_BUTTON_BORDER_RADIUS: 24,
-  QUICK_ACTION_HEIGHT: 44,
-  QUICK_ACTION_RADIUS: 22,
+  ACTION_BUTTON_SIZE: 50,
+  ACTION_BUTTON_ICON_SIZE: 22,
+  ACTION_BUTTON_BORDER_RADIUS: 25,
+  QUICK_ACTION_HEIGHT: 46,
+  QUICK_ACTION_RADIUS: 23,
   
   // Animations
-  ANIMATION_DURATION_FAST: 200,
-  ANIMATION_DURATION_NORMAL: 300,
-  ANIMATION_DURATION_SLOW: 500,
+  ANIMATION_DURATION_FAST: 180,
+  ANIMATION_DURATION_NORMAL: 280,
+  ANIMATION_DURATION_SLOW: 450,
   SPRING_CONFIG: {
-    DAMPING: 18,
-    STIFFNESS: 250,
+    DAMPING: 15,
+    STIFFNESS: 280,
     MASS: 1,
   },
   
@@ -102,39 +101,40 @@ export const CHAT_STYLES = {
   
   // Gradients
   GRADIENTS: {
-    PRIMARY: ['#2C6BED', '#1A54D9'],
+    PRIMARY: ['#3C78F0', '#1A4DBF'],
     SECONDARY: ['#00C6BA', '#00A89E'],
-    USER_MESSAGE: ['#2C6BED', '#1953D8'],
-    QUICK_ACTION: ['rgba(44, 107, 237, 0.12)', 'rgba(44, 107, 237, 0.22)'],
-    SEND_BUTTON: ['#2C6BED', '#1E56CC'],
-    VOICE_BUTTON: ['rgba(44, 107, 237, 0.08)', 'rgba(44, 107, 237, 0.16)'],
-    HEADER: ['#2C6BED', '#1850C4'],
+    USER_MESSAGE: ['#3C78F0', '#1D54C4'],
+    QUICK_ACTION: ['rgba(44, 107, 237, 0.15)', 'rgba(44, 107, 237, 0.28)'],
+    SEND_BUTTON: ['#3C78F0', '#1D54C4'],
+    VOICE_BUTTON: ['rgba(44, 107, 237, 0.12)', 'rgba(44, 107, 237, 0.24)'],
+    HEADER: ['#3C78F0', '#1A4DBF'],
   },
 };
 
-// RTL text styling helper
-export const getRTLTextStyle = (fontSize = 16, color = COLORS.text, fontWeight = 'normal') => {
+// RTL text styling helper with enhanced contrast
+export const getRTLTextStyle = (fontSize = 16, color = '#1A2138', fontWeight = 'normal') => {
   return {
     fontSize,
     color,
     fontWeight,
     textAlign: 'right',
     writingDirection: 'rtl',
+    letterSpacing: -0.2, // Tighter text for premium feel
   };
 };
 
 // Enhanced glass card style
 export const glassCard = {
-  ...getGlassEffect(0.7),
-  borderRadius: 20,
-  borderWidth: Platform.OS === 'ios' ? 0 : 0.5,
-  borderColor: 'rgba(200, 220, 240, 0.5)',
+  ...getGlassEffect(0.85),
+  borderRadius: 22,
+  borderWidth: Platform.OS === 'ios' ? 0.5 : 1,
+  borderColor: 'rgba(210, 230, 250, 0.6)',
   ...getShadow('medium'),
 };
 
-// Button animation config
+// Button animation config with more pronounced effects
 export const BUTTON_ANIMATION = {
-  SCALE_DOWN: 0.96,
-  DURATION_PRESS: 100,
-  DURATION_RELEASE: 200,
+  SCALE_DOWN: 0.92,
+  DURATION_PRESS: 80,
+  DURATION_RELEASE: 180,
 }; 

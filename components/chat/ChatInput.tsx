@@ -45,8 +45,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   useEffect(() => {
     Animated.spring(sendButtonScale, {
       toValue: showSendButton ? 1 : 0,
-      friction: 6,
-      tension: 40,
+      friction: 5,
+      tension: 50,
       useNativeDriver: true,
     }).start();
   }, [showSendButton]);
@@ -54,7 +54,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   // Handle focus animation
   useEffect(() => {
     Animated.timing(glowOpacity, {
-      toValue: isFocused ? 0.7 : 0,
+      toValue: isFocused ? 0.85 : 0,
       duration: CHAT_STYLES.ANIMATION_DURATION_NORMAL,
       useNativeDriver: false,
     }).start();
@@ -66,13 +66,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
       Animated.loop(
         Animated.sequence([
           Animated.timing(recordingPulse, {
-            toValue: 1.3,
-            duration: 800,
+            toValue: 1.4,
+            duration: 700,
             useNativeDriver: true,
           }),
           Animated.timing(recordingPulse, {
             toValue: 1,
-            duration: 800,
+            duration: 700,
             useNativeDriver: true,
           }),
         ])
@@ -96,7 +96,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     if (message.trim() === '') return;
     
     // Provide haptic feedback
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     
     onSendMessage(message);
     setMessage('');
@@ -104,7 +104,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
     // Animate the button
     Animated.sequence([
       Animated.timing(scaleAnim, {
-        toValue: BUTTON_ANIMATION.SCALE_DOWN,
+        toValue: BUTTON_ANIMATION.SCALE_DOWN * 0.92,
         duration: BUTTON_ANIMATION.DURATION_PRESS,
         useNativeDriver: true,
       }),
@@ -143,7 +143,10 @@ const ChatInput: React.FC<ChatInputProps> = ({
       />
       
       {/* Text input */}
-      <View style={styles.inputWrapper}>
+      <View style={[
+        styles.inputWrapper,
+        isFocused && styles.inputWrapperFocused
+      ]}>
         <TextInput
           ref={inputRef}
           style={styles.input}
@@ -179,11 +182,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
           <TouchableOpacity
             style={styles.sendButton}
             onPress={handleSend}
-            activeOpacity={0.7}
+            activeOpacity={0.6}
             disabled={inputDisabled}
           >
             <LinearGradient
-              colors={['#2C6BED', '#1E56CC']}
+              colors={['#3C78F0', '#1D54C4']}
               style={styles.buttonGradient}
             >
               <FontAwesome5 
@@ -217,7 +220,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
             ]}
             onPress={handleVoiceInput}
             onLongPress={handleVoiceInput}
-            activeOpacity={0.7}
+            activeOpacity={0.6}
             disabled={inputDisabled}
           >
             {isRecording ? (
@@ -240,7 +243,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
               </View>
             ) : (
               <LinearGradient
-                colors={['rgba(44, 107, 237, 0.08)', 'rgba(44, 107, 237, 0.16)']}
+                colors={['rgba(44, 107, 237, 0.12)', 'rgba(44, 107, 237, 0.24)']}
                 style={styles.buttonGradient}
               >
                 <FontAwesome5
@@ -262,82 +265,90 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
     position: 'relative',
     width: '100%',
   },
   inputGlow: {
     position: 'absolute',
-    top: 12,
-    left: 12,
-    right: 60,
+    top: 14,
+    left: 14,
+    right: 62,
     backgroundColor: 'transparent',
     borderRadius: CHAT_STYLES.INPUT_BORDER_RADIUS,
     shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 12,
-    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    shadowOpacity: 0.3,
   },
   inputWrapper: {
     flex: 1,
     borderRadius: CHAT_STYLES.INPUT_BORDER_RADIUS,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    ...getShadow('light'),
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    ...getShadow('medium'),
     overflow: 'hidden',
-    marginRight: 10,
-    borderWidth: Platform.OS === 'ios' ? 0 : 0.5,
-    borderColor: 'rgba(230, 240, 250, 0.8)',
-    height: CHAT_STYLES.INPUT_HEIGHT,
+    marginRight: 12,
+    borderWidth: 1.2,
+    borderColor: 'rgba(200, 220, 250, 0.6)',
+    height: CHAT_STYLES.INPUT_HEIGHT + 4,
     justifyContent: 'center',
     ...Platform.select({
       ios: {
-        ...getGlassEffect(0.8),
+        ...getGlassEffect(0.85),
       },
     }),
   },
+  inputWrapperFocused: {
+    borderColor: 'rgba(44, 107, 237, 0.4)',
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+  },
   input: {
-    paddingVertical: 10,
-    paddingHorizontal: CHAT_STYLES.INPUT_PADDING_HORIZONTAL,
+    paddingVertical: 12,
+    paddingHorizontal: CHAT_STYLES.INPUT_PADDING_HORIZONTAL + 2,
     fontSize: CHAT_STYLES.INPUT_FONT_SIZE,
     maxHeight: CHAT_STYLES.INPUT_MAX_HEIGHT,
-    color: COLORS.text,
+    color: '#1A2138',
     textAlign: 'right',
     writingDirection: 'rtl',
+    fontWeight: '500',
   },
   buttonsContainer: {
     position: 'relative',
-    width: CHAT_STYLES.ACTION_BUTTON_SIZE,
-    height: CHAT_STYLES.ACTION_BUTTON_SIZE,
+    width: CHAT_STYLES.ACTION_BUTTON_SIZE + 2,
+    height: CHAT_STYLES.ACTION_BUTTON_SIZE + 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   buttonContainer: {
     position: 'absolute',
-    width: CHAT_STYLES.ACTION_BUTTON_SIZE,
-    height: CHAT_STYLES.ACTION_BUTTON_SIZE,
+    width: CHAT_STYLES.ACTION_BUTTON_SIZE + 2,
+    height: CHAT_STYLES.ACTION_BUTTON_SIZE + 2,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: CHAT_STYLES.ACTION_BUTTON_BORDER_RADIUS,
-    ...getShadow('medium'),
+    ...getShadow('strong'),
   },
   sendButton: {
-    width: CHAT_STYLES.ACTION_BUTTON_SIZE,
-    height: CHAT_STYLES.ACTION_BUTTON_SIZE,
+    width: CHAT_STYLES.ACTION_BUTTON_SIZE + 2,
+    height: CHAT_STYLES.ACTION_BUTTON_SIZE + 2,
     borderRadius: CHAT_STYLES.ACTION_BUTTON_BORDER_RADIUS,
     overflow: 'hidden',
+    borderWidth: Platform.OS === 'ios' ? 0 : 1,
+    borderColor: 'rgba(20, 70, 180, 0.5)',
   },
   voiceButton: {
-    width: CHAT_STYLES.ACTION_BUTTON_SIZE,
-    height: CHAT_STYLES.ACTION_BUTTON_SIZE,
+    width: CHAT_STYLES.ACTION_BUTTON_SIZE + 2,
+    height: CHAT_STYLES.ACTION_BUTTON_SIZE + 2,
     borderRadius: CHAT_STYLES.ACTION_BUTTON_BORDER_RADIUS,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderWidth: 1,
-    borderColor: 'rgba(44, 107, 237, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderWidth: 1.2,
+    borderColor: 'rgba(44, 107, 237, 0.2)',
   },
   voiceButtonRecording: {
     backgroundColor: '#F44336',
-    borderColor: 'rgba(244, 67, 54, 0.2)',
+    borderColor: 'rgba(244, 67, 54, 0.4)',
+    ...getShadow('strong'),
   },
   buttonGradient: {
     flex: 1,
@@ -352,10 +363,10 @@ const styles = StyleSheet.create({
   },
   recordingPulse: {
     position: 'absolute',
-    width: CHAT_STYLES.ACTION_BUTTON_SIZE - 8,
-    height: CHAT_STYLES.ACTION_BUTTON_SIZE - 8,
-    borderRadius: (CHAT_STYLES.ACTION_BUTTON_SIZE - 8) / 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    width: CHAT_STYLES.ACTION_BUTTON_SIZE,
+    height: CHAT_STYLES.ACTION_BUTTON_SIZE,
+    borderRadius: CHAT_STYLES.ACTION_BUTTON_SIZE / 2,
+    backgroundColor: 'rgba(255, 80, 80, 0.5)',
   },
 });
 

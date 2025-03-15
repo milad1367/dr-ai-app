@@ -53,12 +53,12 @@ const QuickQuestion: React.FC<QuickQuestionProps> = ({
       Animated.sequence([
         Animated.timing(glowAnim, {
           toValue: 1,
-          duration: 2500,
+          duration: 2000, // Slightly faster pulse
           useNativeDriver: false,
         }),
         Animated.timing(glowAnim, {
           toValue: 0,
-          duration: 2500,
+          duration: 2000,
           useNativeDriver: false,
         }),
       ])
@@ -68,11 +68,11 @@ const QuickQuestion: React.FC<QuickQuestionProps> = ({
   // Handle press animation with haptic feedback
   const handlePress = () => {
     // Provide haptic feedback
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); // Increased feedback intensity
     
     Animated.sequence([
       Animated.timing(scaleAnim, {
-        toValue: BUTTON_ANIMATION.SCALE_DOWN,
+        toValue: BUTTON_ANIMATION.SCALE_DOWN * 0.95, // More pronounced press effect
         duration: BUTTON_ANIMATION.DURATION_PRESS,
         useNativeDriver: true,
       }),
@@ -89,12 +89,12 @@ const QuickQuestion: React.FC<QuickQuestionProps> = ({
   // Interpolate shadow and border colors for animation
   const borderColor = glowAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['rgba(44, 107, 237, 0.2)', 'rgba(44, 107, 237, 0.5)']
+    outputRange: ['rgba(44, 107, 237, 0.3)', 'rgba(44, 107, 237, 0.7)'] // Increased contrast
   });
   
   const shadowOpacity = glowAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0.12, 0.25]
+    outputRange: [0.15, 0.35] // Increased shadow contrast
   });
   
   return (
@@ -113,7 +113,7 @@ const QuickQuestion: React.FC<QuickQuestionProps> = ({
       <TouchableOpacity
         style={styles.button}
         onPress={handlePress}
-        activeOpacity={0.8}
+        activeOpacity={0.7} // Slightly more responsive feel
       >
         <Animated.View style={[
           styles.buttonInner,
@@ -124,14 +124,15 @@ const QuickQuestion: React.FC<QuickQuestionProps> = ({
         ]}>
           <View style={styles.iconContainer}>
             <LinearGradient
-              colors={['rgba(44, 107, 237, 0.12)', 'rgba(44, 107, 237, 0.22)']}
+              colors={['rgba(44, 107, 237, 0.15)', 'rgba(44, 107, 237, 0.28)']} // Slightly more contrast
               style={styles.iconGradient}
             >
               <FontAwesome5 
                 name={icon} 
-                size={CHAT_STYLES.ACTION_BUTTON_ICON_SIZE - 4} 
+                size={CHAT_STYLES.ACTION_BUTTON_ICON_SIZE - 2} 
                 color={COLORS.primary} 
-                style={styles.icon} 
+                style={styles.icon}
+                solid // Use solid icons for better visibility
               />
             </LinearGradient>
           </View>
@@ -146,6 +147,12 @@ const styles = StyleSheet.create({
   container: {
     margin: 5,
     maxWidth: 200,
+    // Add subtle elevation to the entire container for more depth
+    ...Platform.select({
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   button: {
     borderRadius: CHAT_STYLES.QUICK_ACTION_RADIUS,
@@ -155,40 +162,48 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12, // Slightly more vertical padding for better touch area
     borderRadius: CHAT_STYLES.QUICK_ACTION_RADIUS,
-    borderWidth: 1,
-    borderColor: 'rgba(44, 107, 237, 0.2)',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderWidth: 1.2, // Slightly thicker border
+    borderColor: 'rgba(44, 107, 237, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)', // Slightly more opaque for better contrast
     shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 4,
-    height: CHAT_STYLES.QUICK_ACTION_HEIGHT,
+    shadowOffset: { width: 0, height: 4 }, // Increased shadow offset
+    shadowOpacity: 0.18, // Increased base shadow opacity
+    shadowRadius: 8, // Increased shadow blur
+    elevation: 5, // Increased elevation for Android
+    height: CHAT_STYLES.QUICK_ACTION_HEIGHT + 2, // Slightly taller
   },
   iconContainer: {
-    marginRight: 10,
+    marginRight: 12, // More space between icon and text
     borderRadius: CHAT_STYLES.QUICK_ACTION_RADIUS / 2,
     overflow: 'hidden',
+    ...getShadow('light'), // Add shadow to icon container
   },
   iconGradient: {
-    width: 32,
-    height: 32,
+    width: 34, // Slightly larger icon area
+    height: 34,
     borderRadius: CHAT_STYLES.QUICK_ACTION_RADIUS / 2,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: Platform.OS === 'ios' ? 0.5 : 0, 
+    borderColor: 'rgba(44, 107, 237, 0.2)',
   },
   icon: {
     textAlign: 'center',
+    shadowColor: COLORS.primary, // Add subtle text shadow to icon
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
   },
   text: {
     color: COLORS.darkBlue,
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700', // Bolder text for better readability
     textAlign: 'right',
     writingDirection: 'rtl',
     flex: 1,
+    letterSpacing: -0.3, // Tighter text for premium feel
   },
 });
 

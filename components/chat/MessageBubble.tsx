@@ -25,7 +25,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
 }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(10)).current;
-  const scaleAnim = useRef(new Animated.Value(0.97)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current; // Start smaller for better pop
   
   // Animate in when the message appears
   useEffect(() => {
@@ -42,8 +42,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       }),
       Animated.spring(scaleAnim, {
         toValue: 1,
-        friction: 6,
-        tension: 40,
+        friction: 5, // Lower friction for more bounce
+        tension: 50, // Higher tension for snappier animation
         useNativeDriver: true,
       })
     ]).start();
@@ -77,7 +77,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           {/* User message with gradient background */}
           {isUserMessage ? (
             <LinearGradient
-              colors={['#2C6BED', '#1953D8']}
+              colors={['#3C78F0', '#1D54C4']} // More vibrant gradient
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.userBubbleGradient}
@@ -94,6 +94,11 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                   {message.formattedTime}
                 </Text>
               )}
+              
+              {/* Add subtle decorative element */}
+              <View style={styles.userDecoration}>
+                <View style={styles.userDecorationDot} />
+              </View>
             </LinearGradient>
           ) : (
             /* AI message with glass effect */
@@ -111,7 +116,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                 </Text>
               )}
               
-              {/* Decorative AI elements */}
+              {/* Enhanced decorative AI elements */}
               <View style={styles.aiDecoration}>
                 <View style={styles.aiDecorationDot} />
                 <View style={styles.aiDecorationLine} />
@@ -139,43 +144,83 @@ const TypingIndicator = () => {
   const dot2Opacity = useRef(new Animated.Value(0.3)).current;
   const dot3Opacity = useRef(new Animated.Value(0.3)).current;
   
+  const dot1Scale = useRef(new Animated.Value(1)).current;
+  const dot2Scale = useRef(new Animated.Value(1)).current;
+  const dot3Scale = useRef(new Animated.Value(1)).current;
+  
   // Create an animated sequence for the dots
   useEffect(() => {
     const animateDots = () => {
       Animated.sequence([
         // Dot 1 animation
-        Animated.timing(dot1Opacity, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
+        Animated.parallel([
+          Animated.timing(dot1Opacity, {
+            toValue: 1,
+            duration: 250, // Faster animation
+            useNativeDriver: true,
+          }),
+          Animated.timing(dot1Scale, {
+            toValue: 1.2, // Add scale animation
+            duration: 250,
+            useNativeDriver: true,
+          }),
+        ]),
         // Dot 2 animation
-        Animated.timing(dot2Opacity, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
+        Animated.parallel([
+          Animated.timing(dot2Opacity, {
+            toValue: 1,
+            duration: 250,
+            useNativeDriver: true,
+          }),
+          Animated.timing(dot2Scale, {
+            toValue: 1.2,
+            duration: 250,
+            useNativeDriver: true,
+          }),
+        ]),
         // Dot 3 animation
-        Animated.timing(dot3Opacity, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
+        Animated.parallel([
+          Animated.timing(dot3Opacity, {
+            toValue: 1,
+            duration: 250,
+            useNativeDriver: true,
+          }),
+          Animated.timing(dot3Scale, {
+            toValue: 1.2,
+            duration: 250,
+            useNativeDriver: true,
+          }),
+        ]),
         // Reset all dots
         Animated.parallel([
           Animated.timing(dot1Opacity, {
             toValue: 0.3,
-            duration: 300,
+            duration: 250,
             useNativeDriver: true,
           }),
           Animated.timing(dot2Opacity, {
             toValue: 0.3,
-            duration: 300,
+            duration: 250,
             useNativeDriver: true,
           }),
           Animated.timing(dot3Opacity, {
             toValue: 0.3,
-            duration: 300,
+            duration: 250,
+            useNativeDriver: true,
+          }),
+          Animated.timing(dot1Scale, {
+            toValue: 1,
+            duration: 250,
+            useNativeDriver: true,
+          }),
+          Animated.timing(dot2Scale, {
+            toValue: 1,
+            duration: 250,
+            useNativeDriver: true,
+          }),
+          Animated.timing(dot3Scale, {
+            toValue: 1,
+            duration: 250,
             useNativeDriver: true,
           }),
         ])
@@ -192,14 +237,41 @@ const TypingIndicator = () => {
       dot1Opacity.stopAnimation();
       dot2Opacity.stopAnimation();
       dot3Opacity.stopAnimation();
+      dot1Scale.stopAnimation();
+      dot2Scale.stopAnimation();
+      dot3Scale.stopAnimation();
     };
   }, []);
   
   return (
     <View style={styles.typingIndicator}>
-      <Animated.View style={[styles.typingDot, { opacity: dot1Opacity }]} />
-      <Animated.View style={[styles.typingDot, { opacity: dot2Opacity }]} />
-      <Animated.View style={[styles.typingDot, { opacity: dot3Opacity }]} />
+      <Animated.View 
+        style={[
+          styles.typingDot, 
+          { 
+            opacity: dot1Opacity,
+            transform: [{ scale: dot1Scale }] 
+          }
+        ]} 
+      />
+      <Animated.View 
+        style={[
+          styles.typingDot, 
+          { 
+            opacity: dot2Opacity,
+            transform: [{ scale: dot2Scale }] 
+          }
+        ]} 
+      />
+      <Animated.View 
+        style={[
+          styles.typingDot, 
+          { 
+            opacity: dot3Opacity,
+            transform: [{ scale: dot3Scale }] 
+          }
+        ]} 
+      />
     </View>
   );
 };
@@ -207,9 +279,9 @@ const TypingIndicator = () => {
 const styles = StyleSheet.create({
   container: {
     marginVertical: CHAT_STYLES.MESSAGE_SPACING / 2,
-    maxWidth: '78%',
+    maxWidth: '80%', // Slightly wider for better content display
     alignSelf: 'flex-start',
-    paddingHorizontal: 2, // Add a bit of space for shadow
+    paddingHorizontal: 3, // Add a bit of space for shadow
   },
   userContainer: {
     alignSelf: 'flex-end',
@@ -218,113 +290,133 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   bubble: {
-    borderRadius: CHAT_STYLES.USER_BUBBLE_RADIUS,
-    minHeight: 40,
+    borderRadius: CHAT_STYLES.USER_BUBBLE_RADIUS + 2, // Slightly more rounded
+    minHeight: 42, // Slightly taller
     overflow: 'hidden',
   },
   userBubbleGradient: {
-    borderRadius: CHAT_STYLES.USER_BUBBLE_RADIUS,
+    borderRadius: CHAT_STYLES.USER_BUBBLE_RADIUS + 2,
     borderBottomRightRadius: 4,
-    paddingHorizontal: CHAT_STYLES.BUBBLE_PADDING_HORIZONTAL,
-    paddingVertical: CHAT_STYLES.BUBBLE_PADDING_VERTICAL,
-    ...getShadow('medium'),
+    paddingHorizontal: CHAT_STYLES.BUBBLE_PADDING_HORIZONTAL + 2, // More horizontal padding
+    paddingVertical: CHAT_STYLES.BUBBLE_PADDING_VERTICAL + 2, // More vertical padding
+    ...getShadow('strong'), // Stronger shadow for more depth
   },
   aiBubble: {
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)', // More opaque for better contrast
     borderBottomLeftRadius: 4,
-    ...getShadow('light'),
-    borderWidth: Platform.OS === 'ios' ? 0 : 0.5,
-    borderColor: 'rgba(200, 220, 240, 0.5)',
+    ...getShadow('medium'), // Medium shadow for better depth
+    borderWidth: Platform.OS === 'ios' ? 0 : 0.8, // Thicker border on Android
+    borderColor: 'rgba(200, 220, 240, 0.6)', // More visible border
     ...Platform.select({
       ios: {
-        ...getGlassEffect(0.8),
+        ...getGlassEffect(0.9), // More pronounced glass effect
       },
       android: {
-        backgroundColor: 'rgba(248, 250, 255, 0.95)',
+        backgroundColor: 'rgba(248, 250, 255, 0.98)', // More opaque on Android
       },
     }),
   },
   aiMessageContent: {
-    paddingHorizontal: CHAT_STYLES.BUBBLE_PADDING_HORIZONTAL,
-    paddingVertical: CHAT_STYLES.BUBBLE_PADDING_VERTICAL,
+    paddingHorizontal: CHAT_STYLES.BUBBLE_PADDING_HORIZONTAL + 2,
+    paddingVertical: CHAT_STYLES.BUBBLE_PADDING_VERTICAL + 2,
     position: 'relative',
   },
   typingBubble: {
-    minWidth: 80,
-    minHeight: 40,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    minWidth: 84, // Slightly wider
+    minHeight: 42, // Slightly taller
+    paddingHorizontal: 14,
+    paddingVertical: 10,
   },
   messageText: {
     fontSize: CHAT_STYLES.MESSAGE_FONT_SIZE,
-    lineHeight: CHAT_STYLES.MESSAGE_LINE_HEIGHT,
+    lineHeight: CHAT_STYLES.MESSAGE_LINE_HEIGHT + 2, // Slightly taller line height
     textAlign: 'right',
     writingDirection: 'rtl',
   },
   userMessageText: {
     color: COLORS.white,
-    fontWeight: '500',
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    fontWeight: '600', // Bolder text
+    textShadowColor: 'rgba(0, 0, 0, 0.15)', // More visible text shadow
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    textShadowRadius: 3,
+    letterSpacing: -0.2, // Tighter text for premium feel
   },
   aiMessageText: {
-    color: COLORS.text,
-    fontWeight: '400',
+    color: '#1A2138', // Darker text for better readability
+    fontWeight: '500', // Slightly bolder text
+    letterSpacing: -0.2, // Tighter text for premium feel
   },
   timeText: {
     fontSize: 10,
     color: COLORS.lightText,
-    marginTop: 6,
+    marginTop: 7, // More space above time text
     textAlign: 'right',
+    opacity: 0.8, // Slightly more visible
   },
   timeTextUser: {
     fontSize: 10,
-    color: 'rgba(255, 255, 255, 0.7)',
-    marginTop: 6,
+    color: 'rgba(255, 255, 255, 0.8)', // More visible time text
+    marginTop: 7,
     textAlign: 'right',
   },
   typingContainer: {
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 32,
+    minHeight: 34,
   },
   typingIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   typingDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 9, // Larger dots
+    height: 9,
+    borderRadius: 4.5,
     backgroundColor: COLORS.primary,
-    marginHorizontal: 3,
+    marginHorizontal: 4, // More space between dots
+    shadowColor: COLORS.primary, // Add subtle glow
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 3,
   },
   aiDecoration: {
     position: 'absolute',
     left: 0,
     top: 0,
-    opacity: 0.6,
+    opacity: 0.7, // More visible decoration
   },
   aiDecorationDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 7, // Larger dot
+    height: 7,
+    borderRadius: 3.5,
     backgroundColor: COLORS.secondary,
     position: 'absolute',
-    left: 3,
-    top: 3,
+    left: 4,
+    top: 4,
   },
   aiDecorationLine: {
-    width: 15,
-    height: 2,
+    width: 18, // Longer line
+    height: 2.5, // Thicker line
     backgroundColor: COLORS.secondary,
     position: 'absolute',
-    left: 7,
+    left: 8,
     top: 5,
-    opacity: 0.4,
+    opacity: 0.5, // More visible line
+  },
+  // Add user message decoration
+  userDecoration: {
+    position: 'absolute',
+    right: 4,
+    top: 4,
+    opacity: 0.3,
+  },
+  userDecorationDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: 'white',
   },
 });
 
