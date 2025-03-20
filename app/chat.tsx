@@ -13,6 +13,7 @@ import {
   Dimensions,
   Keyboard,
   TouchableOpacity,
+  I18nManager,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { COLORS } from '../constants';
@@ -35,8 +36,21 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { CHAT_STYLES, getShadow, getGlassEffect } from '../components/chat/ChatStyles';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+// Enable RTL for the entire application
+I18nManager.forceRTL(true);
+
 // Get screen dimensions for responsive styling
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// Updated medical teal/blue colors
+const MEDICAL_COLORS = {
+  primary: '#00A8B5', // Teal primary color
+  secondary: '#0078A8', // Deeper blue secondary color
+  light: '#E5F8FA', // Very light teal for backgrounds
+  highlight: '#00C6D4', // Bright teal for highlights
+  text: '#2A4054', // Dark blue-gray for text
+  background: '#FFFFFF', // Clean white background
+};
 
 export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -52,9 +66,9 @@ export default function ChatScreen() {
   const listRef = useRef<FlatList>(null);
   const insets = useSafeAreaInsets();
   
-  // Initialize with welcome message
+  // Initialize with welcome message in Persian
   useEffect(() => {
-    const welcomeMessage: AIMessage = createAIMessage(CHAT_TEXT.WELCOME_MESSAGE);
+    const welcomeMessage: AIMessage = createAIMessage("سلام! من دستیار هوش مصنوعی پزشکی شما هستم. چگونه می‌توانم کمکتان کنم؟");
     setMessages([welcomeMessage]);
     
     // Animate in UI elements
@@ -118,24 +132,32 @@ export default function ChatScreen() {
     
     try {
       // Get AI response with artificial delay
-      const response = await getAIResponse(text);
-      
-      // Add the AI response to messages
-      const aiMessage: AIMessage = createAIMessage(response);
-      
-      // Remove typing indicator and add the real response
-      setIsTyping(false);
-      setMessages((prev: Message[]) => [...prev, aiMessage]);
-      
-      // Scroll to show the new message
-      scrollToBottom();
-      
-      // Provide haptic feedback when response arrives
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      // For demo purposes, we'll use placeholder responses in Persian
+      setTimeout(() => {
+        const responseOptions = [
+          "بله، من می‌توانم در این مورد کمک کنم. لطفاً جزئیات بیشتری بدهید.",
+          "براساس اطلاعاتی که دادید، پیشنهاد می‌کنم...",
+          "این علائم می‌تواند نشان‌دهنده چندین مورد باشد. برای تشخیص دقیق‌تر به اطلاعات بیشتری نیاز دارم.",
+          "لطفاً توجه داشته باشید که من فقط اطلاعات عمومی ارائه می‌دهم و جایگزین مشاوره پزشکی نیستم.",
+        ];
+        
+        const randomResponse = responseOptions[Math.floor(Math.random() * responseOptions.length)];
+        const aiMessage: AIMessage = createAIMessage(randomResponse);
+        
+        // Remove typing indicator and add the real response
+        setIsTyping(false);
+        setMessages((prev: Message[]) => [...prev, aiMessage]);
+        
+        // Scroll to show the new message
+        scrollToBottom();
+        
+        // Provide haptic feedback when response arrives
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setInputDisabled(false);
+      }, 1500);
     } catch (error) {
       setIsTyping(false);
       console.error('Error getting AI response:', error);
-    } finally {
       setInputDisabled(false);
     }
   };
@@ -150,14 +172,14 @@ export default function ChatScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
       
       try {
-        // Mock speech-to-text conversion
-        const spokenText = await convertSpeechToText();
-        
-        // Send the transcribed message
-        handleSendMessage(spokenText);
+        // For demo purposes, we'll use a placeholder voice input text in Persian
+        setTimeout(() => {
+          const transcribedText = "سردرد شدید دارم و چشمانم درد می‌کند";
+          handleSendMessage(transcribedText);
+          setIsRecording(false);
+        }, 2000);
       } catch (error) {
         console.error('Error in voice input:', error);
-      } finally {
         setIsRecording(false);
       }
     } else {
@@ -173,10 +195,14 @@ export default function ChatScreen() {
   
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#3C78F0" />
+      <StatusBar barStyle="light-content" backgroundColor={MEDICAL_COLORS.primary} />
       
-      {/* Chat header */}
-      <ChatHeader onBackPress={handleBackPress} />
+      {/* Chat header with Persian title */}
+      <ChatHeader 
+        onBackPress={handleBackPress}
+        title="🩺 چت با دکتر هوش مصنوعی"
+        isRTL={true}
+      />
       
       {/* Main content area with gradient background */}
       <KeyboardAvoidingView
@@ -184,31 +210,26 @@ export default function ChatScreen() {
         style={styles.keyboardAvoidingView}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        <LinearGradient
-          colors={['#3C78F0', '#2450B2', '#1A3A80']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.backgroundGradient}
-        >
-          {/* Background pattern for visual interest */}
+        <View style={styles.chatBackground}>
+          {/* Background pattern for subtle visual interest */}
           <Animated.View 
             style={[
               styles.backgroundPattern,
               { opacity: backgroundPatternOpacity }
             ]}
           >
-            {[...Array(6)].map((_, index) => (
+            {[...Array(4)].map((_, index) => (
               <View 
                 key={index}
                 style={[
                   styles.patternCircle,
                   {
-                    top: 50 + (index % 3) * (SCREEN_HEIGHT / 4),
+                    top: 50 + (index % 2) * (SCREEN_HEIGHT / 3),
                     right: index % 2 === 0 ? -30 : undefined,
                     left: index % 2 === 1 ? -30 : undefined,
-                    width: 120 + (index % 3) * 40,
-                    height: 120 + (index % 3) * 40,
-                    opacity: 0.07 - (index * 0.005),
+                    width: 120 + (index % 2) * 40,
+                    height: 120 + (index % 2) * 40,
+                    opacity: 0.05 - (index * 0.005),
                   }
                 ]}
               />
@@ -229,6 +250,7 @@ export default function ChatScreen() {
               <MessageBubble
                 message={item}
                 isLastMessage={index === messages.length - 1}
+                isRTL={true}
               />
             )}
             showsVerticalScrollIndicator={false}
@@ -242,33 +264,23 @@ export default function ChatScreen() {
           {/* Typing indicator */}
           {isTyping && (
             <View style={styles.typingContainer}>
-              <MessageBubble message={createTypingIndicatorMessage() as TypingIndicatorMessage} />
+              <MessageBubble 
+                message={createTypingIndicatorMessage() as TypingIndicatorMessage}
+                isRTL={true}
+              />
             </View>
           )}
-          
-          {/* Float button to scroll to bottom when not at bottom */}
-          <TouchableOpacity 
-            style={styles.scrollToBottomButton}
-            onPress={() => scrollToBottom(true)}
-          >
-            <LinearGradient
-              colors={['#3C78F0', '#1D54C4']}
-              style={styles.scrollButtonGradient}
-            >
-              <View style={styles.scrollButtonIcon} />
-            </LinearGradient>
-          </TouchableOpacity>
-          
-          {/* Chat input */}
-          <View style={styles.inputContainer}>
-            <ChatInput
-              onSendMessage={handleSendMessage}
-              onStartVoiceInput={handleVoiceInput}
-              isRecording={isRecording}
-              inputDisabled={inputDisabled}
-            />
-          </View>
-        </LinearGradient>
+        </View>
+        
+        {/* Input area */}
+        <ChatInput
+          onSendMessage={handleSendMessage}
+          onStartVoiceInput={handleVoiceInput}
+          isRecording={isRecording}
+          inputDisabled={inputDisabled}
+          isRTL={true}
+          placeholder="پیام خود را اینجا بنویسید..."
+        />
       </KeyboardAvoidingView>
     </View>
   );
@@ -277,15 +289,15 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#3C78F0',
+    backgroundColor: MEDICAL_COLORS.background,
   },
   keyboardAvoidingView: {
     flex: 1,
   },
-  backgroundGradient: {
+  chatBackground: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+    backgroundColor: MEDICAL_COLORS.background,
+    position: 'relative',
   },
   backgroundPattern: {
     position: 'absolute',
@@ -293,59 +305,22 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    overflow: 'hidden',
+    zIndex: -1,
   },
   patternCircle: {
     position: 'absolute',
     borderRadius: 100,
-    backgroundColor: COLORS.white,
+    backgroundColor: MEDICAL_COLORS.primary,
   },
   messagesList: {
     flex: 1,
-    paddingTop: 16,
   },
   messagesContent: {
     paddingHorizontal: 16,
-    paddingBottom: 20,
+    paddingTop: 16,
   },
   typingContainer: {
     paddingHorizontal: 16,
-    marginBottom: 16,
-    position: 'absolute',
-    bottom: 90,
-    left: 0,
-    right: 0,
-  },
-  inputContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'transparent',
-  },
-  scrollToBottomButton: {
-    position: 'absolute',
-    bottom: 100,
-    right: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    ...getShadow('strong'),
-    overflow: 'hidden',
-  },
-  scrollButtonGradient: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scrollButtonIcon: {
-    width: 12,
-    height: 12,
-    borderLeftWidth: 2,
-    borderBottomWidth: 2,
-    borderColor: COLORS.white,
-    transform: [{ rotate: '-45deg' }],
-    marginTop: -6,
+    marginBottom: 8,
   },
 }); 

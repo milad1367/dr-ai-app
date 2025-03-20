@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   Animated,
   Platform,
+  I18nManager,
 } from 'react-native';
 import { COLORS } from '../../constants';
 import { CHAT_TEXT } from '../../constants/chatConstants';
@@ -15,11 +16,27 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { CHAT_STYLES, getShadow } from './ChatStyles';
 import * as Haptics from 'expo-haptics';
 
+// Updated medical teal/blue colors
+const MEDICAL_COLORS = {
+  primary: '#00A8B5', // Teal primary color
+  secondary: '#0078A8', // Deeper blue secondary color
+  light: '#E5F8FA', // Very light teal for backgrounds
+  highlight: '#00C6D4', // Bright teal for highlights
+  text: '#2A4054', // Dark blue-gray for text
+  background: '#FFFFFF', // Clean white background
+};
+
 interface ChatHeaderProps {
   onBackPress?: () => void;
+  title?: string;
+  isRTL?: boolean;
 }
 
-const ChatHeader: React.FC<ChatHeaderProps> = ({ onBackPress }) => {
+const ChatHeader: React.FC<ChatHeaderProps> = ({ 
+  onBackPress,
+  title = "🩺 چت با دکتر هوش مصنوعی",
+  isRTL = true
+}) => {
   // Animated values for status pulse effect
   const pulseAnim = useRef(new Animated.Value(0.4)).current;
   const statusOpacity = useRef(new Animated.Value(0)).current;
@@ -67,7 +84,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onBackPress }) => {
   }, []);
   
   const handleBackPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); // Stronger feedback
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (onBackPress) onBackPress();
   };
   
@@ -83,7 +100,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onBackPress }) => {
         width: '100%',
       }}>
         <LinearGradient
-          colors={['#3C78F0', '#1A4DBF']} // Richer blue gradient
+          colors={[MEDICAL_COLORS.primary, MEDICAL_COLORS.secondary]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.gradient}
@@ -108,83 +125,70 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onBackPress }) => {
             ))}
           </View>
           
-          <View style={styles.container}>
-            {/* Back button */}
+          <View style={[
+            styles.container,
+            isRTL && styles.rtlContainer
+          ]}>
+            {/* Back button - in RTL, this points left */}
             {onBackPress && (
               <TouchableOpacity
                 style={styles.backButton}
                 onPress={handleBackPress}
-                activeOpacity={0.6} // More responsive
+                activeOpacity={0.6}
               >
                 <View style={styles.iconBackground}>
                   <FontAwesome5 
-                    name="arrow-right" 
+                    name={isRTL ? "arrow-left" : "arrow-right"}
                     size={CHAT_STYLES.HEADER_ICON_SIZE - 1} 
                     color={COLORS.white} 
-                    solid // Use solid icon for better visibility
+                    solid
                   />
                 </View>
               </TouchableOpacity>
             )}
             
-            {/* AI Doctor Info */}
-            <View style={styles.doctorInfo}>
-              <View style={styles.avatarContainer}>
-                <View style={styles.avatarInner}>
-                  <FontAwesome5 
-                    name="robot" 
-                    size={CHAT_STYLES.HEADER_ICON_SIZE + 2} // Larger icon 
-                    color={COLORS.white} 
-                    solid 
-                  />
-                </View>
-                
-                {/* Animated status ring */}
+            {/* Title Section */}
+            <View style={[
+              styles.titleContainer,
+              isRTL && styles.rtlTitleContainer
+            ]}>
+              <Text style={[
+                styles.titleText,
+                isRTL && styles.rtlText
+              ]}>
+                {title}
+              </Text>
+              
+              {/* Online status indicator */}
+              <Animated.View 
+                style={[
+                  styles.statusContainer,
+                  isRTL && styles.rtlStatusContainer,
+                  { opacity: statusOpacity }
+                ]}
+              >
                 <Animated.View 
                   style={[
-                    styles.statusRing, 
+                    styles.statusDot,
                     { 
-                      opacity: Animated.multiply(statusOpacity, pulseAnim),
-                      transform: [{ scale: pulseAnim }]
+                      opacity: pulseAnim,
+                      transform: [{ scale: Animated.add(0.8, Animated.multiply(pulseAnim, 0.4)) }]
                     }
                   ]} 
                 />
-                
-                {/* Inner glow */}
-                <Animated.View 
-                  style={[
-                    styles.innerGlow,
-                    { opacity: Animated.multiply(statusOpacity, 0.85) } // More visible glow
-                  ]} 
-                />
-              </View>
-              
-              <View style={styles.infoContainer}>
-                <Text style={styles.doctorName}>{CHAT_TEXT.AI_NAME}</Text>
-                <Animated.View 
-                  style={[
-                    styles.statusContainer,
-                    { opacity: statusOpacity }
-                  ]}
-                >
-                  <Animated.View 
-                    style={[
-                      styles.statusDot,
-                      { 
-                        opacity: pulseAnim,
-                        transform: [{ scale: Animated.add(0.8, Animated.multiply(pulseAnim, 0.4)) }] // Add a pulse to the dot
-                      }
-                    ]} 
-                  />
-                  <Text style={styles.statusText}>آنلاین</Text>
-                </Animated.View>
-              </View>
+                <Text style={[
+                  styles.statusText,
+                  isRTL && styles.rtlText
+                ]}>
+                  {isRTL ? "آنلاین" : "Online"}
+                </Text>
+              </Animated.View>
             </View>
             
             {/* Menu Button */}
             <TouchableOpacity
               style={styles.menuButton}
-              activeOpacity={0.6} // More responsive
+              activeOpacity={0.6}
               onPress={handleMenuPress}
             >
               <View style={styles.iconBackground}>
@@ -192,7 +196,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onBackPress }) => {
                   name="ellipsis-v" 
                   size={CHAT_STYLES.HEADER_ICON_SIZE - 1} 
                   color={COLORS.white} 
-                  solid // Use solid icon for better visibility
+                  solid
                 />
               </View>
             </TouchableOpacity>
@@ -208,18 +212,18 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ onBackPress }) => {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: '#3C78F0', // Match gradient start color
+    backgroundColor: MEDICAL_COLORS.primary,
     zIndex: 10,
   },
   gradient: {
-    shadowColor: '#1A3A80',
+    shadowColor: MEDICAL_COLORS.secondary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
     elevation: 20,
     position: 'relative',
     zIndex: 10,
-    borderBottomLeftRadius: 16, // More pronounced rounding
+    borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16,
     overflow: 'hidden',
   },
@@ -241,135 +245,72 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 2,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)', // Subtle highlight line at bottom
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: CHAT_STYLES.HEADER_PADDING_VERTICAL + 2, // Slightly more vertical padding
+    justifyContent: 'flex-start',
+    paddingVertical: CHAT_STYLES.HEADER_PADDING_VERTICAL + 2,
     paddingHorizontal: 16,
-    height: CHAT_STYLES.HEADER_HEIGHT + 4, // Slightly taller header
+  },
+  rtlContainer: {
+    flexDirection: 'row-reverse',
   },
   backButton: {
-    padding: 6, // Larger touch target
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginEnd: 10,
   },
   iconBackground: {
-    width: 44, // Larger icon background
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.22)', // Slightly more opaque
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)', // More visible border
-    ...Platform.select({
-      ios: {
-        shadowColor: '#fff',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-      },
-    }),
   },
-  doctorInfo: {
+  titleContainer: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14, // Adjusted spacing
+    marginLeft: 8,
   },
-  avatarContainer: {
-    width: 52, // Larger avatar container
-    height: 52,
-    borderRadius: 26,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-    marginRight: 16,
+  rtlTitleContainer: {
+    alignItems: 'flex-end',
+    marginLeft: 0,
+    marginRight: 8,
   },
-  avatarInner: {
-    width: 48, // Larger avatar
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)', // Slightly more opaque
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.42)', // More visible border
-    ...Platform.select({
-      ios: {
-        shadowColor: '#fff',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.6, // More visible shadow
-        shadowRadius: 6,
-      },
-    }),
-  },
-  innerGlow: {
-    position: 'absolute',
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.18)', // More visible glow
-    shadowColor: '#fff',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.7, // More intense glow
-    shadowRadius: 12, // Larger glow radius
-  },
-  statusRing: {
-    position: 'absolute',
-    width: 62, // Larger ring
-    height: 62,
-    borderRadius: 31,
-    borderWidth: 2.5, // Thicker border
-    borderColor: '#4CAF50',
-    backgroundColor: 'transparent',
-    shadowColor: '#4CAF50', // Add glow to the ring
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
-  },
-  infoContainer: {
-    flex: 1,
-  },
-  doctorName: {
-    fontSize: 20, // Larger font size
-    fontWeight: '700',
+  titleText: {
+    fontSize: 18,
+    fontWeight: 'bold',
     color: COLORS.white,
-    marginBottom: 4,
+    marginBottom: 2,
+  },
+  rtlText: {
     textAlign: 'right',
-    textShadowColor: 'rgba(0, 0, 0, 0.25)', // More pronounced text shadow
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
-    letterSpacing: -0.3, // Tighter text for premium feel
+    writingDirection: 'rtl',
   },
   statusContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
+  },
+  rtlStatusContainer: {
+    flexDirection: 'row-reverse',
   },
   statusDot: {
-    width: 9, // Slightly larger dot
-    height: 9,
-    borderRadius: 4.5,
-    backgroundColor: '#4CAF50',
-    marginLeft: 6,
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.9, // More visible glow
-    shadowRadius: 5,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#4AE66E',
+    marginRight: 5,
   },
   statusText: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.95)',
-    textAlign: 'right',
-    fontWeight: '600', // Bolder text
-    textShadowColor: 'rgba(0, 0, 0, 0.15)', // Add subtle text shadow
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   menuButton: {
-    padding: 6, // Larger touch target
+    padding: 6,
   },
 });
 

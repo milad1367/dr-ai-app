@@ -8,6 +8,7 @@ import {
   Keyboard,
   Platform,
   Dimensions,
+  I18nManager,
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { COLORS } from '../../constants';
@@ -17,11 +18,23 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { CHAT_STYLES, getShadow, BUTTON_ANIMATION } from './ChatStyles';
 import { BlurView } from 'expo-blur';
 
+// Updated medical teal/blue colors
+const MEDICAL_COLORS = {
+  primary: '#00A8B5', // Teal primary color
+  secondary: '#0078A8', // Deeper blue secondary color
+  light: '#E5F8FA', // Very light teal for backgrounds
+  highlight: '#00C6D4', // Bright teal for highlights
+  text: '#2A4054', // Dark blue-gray for text
+  background: '#FFFFFF', // Clean white background
+};
+
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
   onStartVoiceInput: () => void;
   isRecording: boolean;
   inputDisabled: boolean;
+  isRTL?: boolean;
+  placeholder?: string;
 }
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -31,6 +44,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
   onStartVoiceInput,
   isRecording = false,
   inputDisabled = false,
+  isRTL = true,
+  placeholder = "پیام خود را اینجا بنویسید...",
 }) => {
   const [message, setMessage] = useState('');
   const inputRef = useRef<TextInput>(null);
@@ -144,30 +159,24 @@ const ChatInput: React.FC<ChatInputProps> = ({
   };
   
   return (
-    <BlurView intensity={Platform.OS === 'ios' ? 20 : 80} tint="dark" style={styles.blurContainer}>
-      <View style={styles.container}>
-        {/* Animated glow effect for input */}
-        <Animated.View
-          style={[
-            styles.inputGlow,
-            {
-              opacity: glowOpacity,
-              shadowColor: COLORS.primary,
-              height: inputHeight,
-            },
-          ]}
-        />
-        
+    <View style={styles.container}>
+      <View style={[
+        styles.inputContainer,
+        isFocused && styles.inputContainerFocused
+      ]}>
         {/* Text input */}
         <View style={[
           styles.inputWrapper,
-          isFocused && styles.inputWrapperFocused,
           { height: inputHeight + 4 }
         ]}>
           <TextInput
             ref={inputRef}
-            style={[styles.input, { height: inputHeight }]}
-            placeholder={CHAT_TEXT.TEXT_INPUT_PLACEHOLDER}
+            style={[
+              styles.input, 
+              { height: inputHeight },
+              isRTL && styles.rtlInput
+            ]}
+            placeholder={placeholder}
             placeholderTextColor={COLORS.lightText}
             value={message}
             onChangeText={handleTextChange}
@@ -178,11 +187,12 @@ const ChatInput: React.FC<ChatInputProps> = ({
             maxLength={500}
             textAlignVertical="center"
             onContentSizeChange={handleContentSizeChange}
+            textAlign={isRTL ? "right" : "left"}
           />
         </View>
         
         {/* Send/Voice button */}
-        <Animated.View style={styles.buttonsContainer}>
+        <View style={styles.buttonsContainer}>
           {/* Send button (animated) */}
           <Animated.View
             style={[
@@ -204,12 +214,12 @@ const ChatInput: React.FC<ChatInputProps> = ({
               disabled={inputDisabled}
             >
               <LinearGradient
-                colors={['#3C78F0', '#1D54C4']}
+                colors={[MEDICAL_COLORS.primary, MEDICAL_COLORS.secondary]}
                 style={styles.buttonGradient}
               >
                 <FontAwesome5 
-                  name="paper-plane" 
-                  size={CHAT_STYLES.ACTION_BUTTON_ICON_SIZE - 2} 
+                  name={isRTL ? "paper-plane" : "paper-plane"} 
+                  size={18} 
                   color={COLORS.white} 
                   solid 
                 />
@@ -248,145 +258,127 @@ const ChatInput: React.FC<ChatInputProps> = ({
                       styles.recordingPulse,
                       {
                         transform: [{ scale: recordingPulse }],
-                        opacity: Animated.subtract(2, recordingPulse),
-                      }
-                    ]} 
+                      },
+                    ]}
                   />
-                  <FontAwesome5
-                    name="stop"
-                    size={CHAT_STYLES.ACTION_BUTTON_ICON_SIZE - 2}
-                    color={COLORS.white}
-                    solid
-                  />
+                  <View style={styles.recordingInner} />
                 </View>
               ) : (
-                <LinearGradient
-                  colors={['rgba(255, 255, 255, 0.2)', 'rgba(255, 255, 255, 0.35)']}
-                  style={styles.buttonGradient}
-                >
-                  <FontAwesome5
-                    name="microphone"
-                    size={CHAT_STYLES.ACTION_BUTTON_ICON_SIZE}
-                    color={COLORS.white}
-                    solid
-                  />
-                </LinearGradient>
+                <FontAwesome5 
+                  name="microphone" 
+                  size={20} 
+                  color={MEDICAL_COLORS.primary} 
+                  solid 
+                />
               )}
             </TouchableOpacity>
           </Animated.View>
-        </Animated.View>
+        </View>
       </View>
-    </BlurView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  blurContainer: {
-    width: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    overflow: 'hidden',
-  },
   container: {
+    width: '100%',
+    paddingHorizontal: 16,
+    paddingBottom: Platform.OS === 'ios' ? 30 : 16,
+    paddingTop: 8,
+    backgroundColor: MEDICAL_COLORS.background,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(210, 230, 250, 0.5)',
+  },
+  inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    position: 'relative',
-    width: '100%',
-  },
-  inputGlow: {
-    position: 'absolute',
-    top: 14,
-    left: 14,
-    right: 62,
-    backgroundColor: 'transparent',
+    backgroundColor: MEDICAL_COLORS.light,
     borderRadius: CHAT_STYLES.INPUT_BORDER_RADIUS,
-    shadowOffset: { width: 0, height: 0 },
-    shadowRadius: 16,
-    shadowOpacity: 0.3,
+    borderWidth: 1,
+    borderColor: 'rgba(210, 230, 250, 0.8)',
+    ...getShadow('light'),
+  },
+  inputContainerFocused: {
+    borderColor: MEDICAL_COLORS.primary,
+    borderWidth: 1.5,
+    ...getShadow('medium'),
   },
   inputWrapper: {
     flex: 1,
-    borderRadius: CHAT_STYLES.INPUT_BORDER_RADIUS,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    ...getShadow('medium'),
-    overflow: 'hidden',
-    marginRight: 12,
-    borderWidth: 1.2,
-    borderColor: 'rgba(255, 255, 255, 0.7)',
+    minHeight: CHAT_STYLES.INPUT_HEIGHT,
     justifyContent: 'center',
-  },
-  inputWrapperFocused: {
-    borderColor: 'rgba(255, 255, 255, 0.9)',
-    backgroundColor: 'rgba(255, 255, 255, 0.98)',
   },
   input: {
-    paddingVertical: 12,
-    paddingHorizontal: CHAT_STYLES.INPUT_PADDING_HORIZONTAL + 2,
+    paddingHorizontal: CHAT_STYLES.INPUT_PADDING_HORIZONTAL,
     fontSize: CHAT_STYLES.INPUT_FONT_SIZE,
-    maxHeight: CHAT_STYLES.INPUT_MAX_HEIGHT,
-    color: '#1A2138',
+    color: MEDICAL_COLORS.text,
+    paddingVertical: 6,
+  },
+  rtlInput: {
     textAlign: 'right',
     writingDirection: 'rtl',
-    fontWeight: '500',
   },
   buttonsContainer: {
+    padding: 6,
     position: 'relative',
-    width: CHAT_STYLES.ACTION_BUTTON_SIZE + 2,
-    height: CHAT_STYLES.ACTION_BUTTON_SIZE + 2,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 50,
+    height: 50,
   },
   buttonContainer: {
     position: 'absolute',
-    width: CHAT_STYLES.ACTION_BUTTON_SIZE + 2,
-    height: CHAT_STYLES.ACTION_BUTTON_SIZE + 2,
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: CHAT_STYLES.ACTION_BUTTON_BORDER_RADIUS,
-    ...getShadow('strong'),
   },
   sendButton: {
-    width: CHAT_STYLES.ACTION_BUTTON_SIZE + 2,
-    height: CHAT_STYLES.ACTION_BUTTON_SIZE + 2,
-    borderRadius: CHAT_STYLES.ACTION_BUTTON_BORDER_RADIUS,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     overflow: 'hidden',
-    borderWidth: Platform.OS === 'ios' ? 0 : 1,
-    borderColor: 'rgba(20, 70, 180, 0.5)',
-  },
-  voiceButton: {
-    width: CHAT_STYLES.ACTION_BUTTON_SIZE + 2,
-    height: CHAT_STYLES.ACTION_BUTTON_SIZE + 2,
-    borderRadius: CHAT_STYLES.ACTION_BUTTON_BORDER_RADIUS,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderWidth: 1.2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  voiceButtonRecording: {
-    backgroundColor: '#F44336',
-    borderColor: 'rgba(244, 67, 54, 0.4)',
-    ...getShadow('strong'),
+    ...getShadow('light'),
   },
   buttonGradient: {
-    flex: 1,
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  voiceButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(0, 168, 181, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 168, 181, 0.2)',
+  },
+  voiceButtonRecording: {
+    backgroundColor: 'rgba(234, 76, 76, 0.1)',
+    borderColor: 'rgba(234, 76, 76, 0.3)',
+  },
   recordingContainer: {
-    flex: 1,
+    width: '100%',
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
   },
   recordingPulse: {
     position: 'absolute',
-    width: CHAT_STYLES.ACTION_BUTTON_SIZE,
-    height: CHAT_STYLES.ACTION_BUTTON_SIZE,
-    borderRadius: CHAT_STYLES.ACTION_BUTTON_SIZE / 2,
-    backgroundColor: 'rgba(255, 80, 80, 0.5)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(234, 76, 76, 0.2)',
+  },
+  recordingInner: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: '#EA4C4C',
   },
 });
 
